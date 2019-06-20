@@ -44,6 +44,13 @@ public class EventRelater {
     private static ArrayList<String> articleSourceNames = null; //list that will contain the corresponding articles' source name (example: The Guardian)
     private double minimumSentiment = 0.0; //the minimum sentiment of an event (minimum being most negative => most important event for us)
     private int minimumSentimentIndex = -1; //index of the minimum sentiment of an event
+    private static String articleResponseStr = null; //the article response json string
+    private static JsonElement rootJsonTree = null; //the root json tree
+    private static JsonObject rootJsonObject = null; //the same tree but as a json object
+    private static JsonElement jsonElement = null; //the articles json element
+    private static JsonObject articlesJsonObject = null; //the articles json object
+    private static Articles articles = null; //the articles pojo
+    private static boolean foundFlag=false; //flag
 
 
     public static void main(String[] args) {
@@ -80,7 +87,6 @@ public class EventRelater {
             EventResponse eventResponse = restTemplate.getForObject(constructedEventsApiUrl, EventResponse.class); //created the object eventResponse that now contains the returned json object
             //this api call is currently using 20 tokens
             breakingEvents = new ArrayList<>();
-            
             breakingEventsTitles = new ArrayList<>();
             breakingEventsSentiments = new ArrayList<>();
             articlesUrls = new ArrayList<>();
@@ -96,37 +102,73 @@ public class EventRelater {
                 if (eventResponse.getEvents().getResults()[i].getEventDate().equals(date) && eventResponse.getEvents().getResults()[i].getSentiment() < 0) { //if the found event's date matches the inputted one and its sentiment is negative
                     constructedGetArticleFromEventUrl = baseGetEventUrl + "apiKey=" + apiKey + "&eventUri=" + eventResponse.getEvents().getResults()[i].getUri() + "&resultType=articles&includeSourceLocation=true"; //construct the api url that will be responsible of getting the article from the event through the event's uri
                     log.info(constructedGetArticleFromEventUrl);
-                    String articleResponseStr = restTemplate.getForObject(constructedGetArticleFromEventUrl, String.class); //created the object articleResponse that now contains the returned json object because since the eventUri might be different, the json object returned will be different
-                    JsonElement jsonTree = parser.parse(articleResponseStr);
-                    JsonObject jsonObject = jsonTree.getAsJsonObject();
-                    for (String key : jsonObject.keySet()) {
-                        JsonElement jsonElement = jsonObject.get(key);
-                        JsonObject articlesObj = jsonElement.getAsJsonObject();
-                        Articles articles = gson.fromJson(articlesObj.get("articles"), Articles.class);
-                        for (ArticleResult result : articles.getResults()) {
-                            System.out.println(result.getUrl());
-                        }
+                    articleResponseStr = restTemplate.getForObject(constructedGetArticleFromEventUrl, String.class); //created the object articleResponse that now contains the returned json object because since the eventUri might be different, the json object returned will be different
+                    rootJsonTree = parser.parse(articleResponseStr);
+                    rootJsonObject = rootJsonTree.getAsJsonObject();
+                    for (String key : rootJsonObject.keySet()) {
+                        jsonElement = rootJsonObject.get(key);
+                        articlesJsonObject = jsonElement.getAsJsonObject();
+                        articles = gson.fromJson(articlesJsonObject.get("articles"), Articles.class);
+                        //int counter=0;
+                        /*for (ArticleResult result : articles.getResults()) {
+                            //counter++;
 
-//                Articles articleResponse = gson.fromJson(jsonElement, Articles.class);
-//                System.out.println(articleResponse);
+                            //System.out.println(result.getSource().getTitle());
+                        }*/
+                        //System.out.println(counter);
+                        //System.out.println(articles.getResults().length);
                     }
 
-                        /*for(int j=0;j<articleResponse.getRootEvent().getArticles().getResults().length;j++) //loop over the event's corresponding articles
-                        {
-                            if(articleResponse.getArticles().getResults()[j].getSource().getLocation().getCountry().getLabel().getEng().equals("United Kingdom") && articleResponse.getArticles().getResults()[j].getSource().getTitle().equals(eventResponse.getEvents().getResults()[i].getTitle().printTitle())) { //if the article's source was from the United Kingdom and the title of the article is equal to the title of the aforementioned event
-                                //log.info("Entered the if statement with i="+Integer.toString(i));
-                                System.out.println(eventResponse.getEvents().getResults()[i].getTitle().printTitle() + ": " + eventResponse.getEvents().getResults()[i].getSentiment()); //print the event and its sentiment
-                                breakingEventsTitles.add(eventResponse.getEvents().getResults()[i].getTitle().printTitle()); //add the title to the list
-                                //log.info("title: "+breakingEventsTitles.get(i));
-                                breakingEventsSentiments.add(eventResponse.getEvents().getResults()[i].getSentiment()); //add the sentiment to the list
-                                articlesUrls.add(articleResponse.getArticles().getResults()[j].getUrl());
-                                articleSourceNames.add(articleResponse.getArticles().getResults()[j].getSource().getTitle());
-                                //log.info("sentiment: "+Double.toString(breakingEventsSentiments.get(i)));
-                            }
+                    for (ArticleResult result : articles.getResults()) //loop over the event's corresponding articles
+                    {
+                        /*if(result.getSource().getLocation()!=null) {
+                            System.out.println("Location: " + result.getSource().getLocation());
+                            System.out.println("Label: " + result.getSource().getLocation().getLabel());
+                            System.out.println("Eng: " + result.getSource().getLocation().getLabel().getEng());
                         }*/
+                        /*System.out.println("Source: "+result.getSource());
+                        System.out.println("Location: "+result.getSource().getLocation());
+                        System.out.println("Label: "+result.getSource().getLocation().getLabel());
+                        System.out.println("Eng: "+result.getSource().getLocation().getLabel().getEng());
+                        System.out.println("Source of result: "+result.getSource());
+                        System.out.println("Source of result: "+result.getSource());
+                        System.out.println("Source of result: "+result.getSource().getTitle());
+                        System.out.println("Event response get events: "+eventResponse.getEvents());*/
+                        //System.out.println("Got title: "+result.getSource().getTitle());
+                        //System.out.println("Event title: "+eventResponse.getEvents().getResults()[i].getTitle().getEng());
+                        //if (result.getSource().getLocation()!=null && result.getSource().getLocation().getLabel().getEng().equals("United Kingdom") && result.getTitle().equals(eventResponse.getEvents().getResults()[i].getTitle().getEng())) { //if the article's source was from the United Kingdom and the title of the article is equal to the title of the aforementioned event
+                        if (result.getSource() != null && result.getSource().getLocation() != null && result.getSource().getLocation().getLabel() != null && result.getSource().getLocation().getLabel().getEng() != null && !result.getSource().getLocation().getLabel().getEng().isEmpty() && result.getSource().getLocation().getLabel().getEng().equals("United Kingdom") && result.getSource().getTitle() != null && eventResponse.getEvents() != null && result.getTitle().equals(eventResponse.getEvents().getResults()[i].getTitle().printTitle())) { //if the article's source was from the United Kingdom and the title of the article is equal to the title of the aforementioned event
+                            //log.info("Entered the if statement with i="+Integer.toString(i));
+                            /*if(result.getSource().getLocation()!=null) {
+                                System.out.println("After if: ");
+                                System.out.println("Location: " + result.getSource().getLocation());
+                                System.out.println("Label: " + result.getSource().getLocation().getLabel());
+                                System.out.println("Eng: " + result.getSource().getLocation().getLabel().getEng());
+                            }*/
+                            //System.out.println(eventResponse.getEvents().getResults()[i].getTitle().printTitle() + ": " + eventResponse.getEvents().getResults()[i].getSentiment()); //print the event and its sentiment
+                            //System.out.println("ENTERED IF");
+                            breakingEventsTitles.add(eventResponse.getEvents().getResults()[i].getTitle().printTitle()); //add the title to the list
+                            //log.info("title: " + breakingEventsTitles.get(i));
+                            breakingEventsSentiments.add(eventResponse.getEvents().getResults()[i].getSentiment()); //add the sentiment to the list
+                            articlesUrls.add(result.getUrl());
+                            articleSourceNames.add(result.getSource().getTitle());
+                            foundFlag=true;
+                            //log.info("sentiment: " + Double.toString(breakingEventsSentiments.get(i)));
+                        }
+                        if(foundFlag) {
+                            foundFlag=false;
+                            break;
+                        }
+
+                    }
                 }
             }
-            /*for (int i = 0; i < 3; i++) //we want to print only the 3 most breaking ones
+            //System.out.println("Testttt:");
+            /*for(int i=0;i<articlesUrls.size();i++){
+                System.out.println(articlesUrls.get(i));
+            }*/
+
+            for (int i = 0; i < 3; i++) //we want to print only the 3 most breaking ones
             {
                 minimumSentiment = Collections.min(breakingEventsSentiments); //calculate the minimum sentiment
                 //log.info("minimum: "+Double.toString(minimumSentiment));
@@ -138,13 +180,13 @@ public class EventRelater {
                 articlesUrls.remove(minimumSentimentIndex); //remove the url at the minimum index because we already used it
                 articleSourceNames.remove(minimumSentimentIndex);
 
-            } //loop and calculate minimum again in the remaining list
+            } //loop and calculate minimum again in the remaining list*/
             System.out.println();
             System.out.println("The 3 most likely events that sparked Islamophobic hashtags on " + date + " are:");
             System.out.println();
             for (int i = 0; i < breakingEvents.size(); i++) {
                 System.out.println(breakingEvents.get(i)); //print the corresponding events
-            }*/
+            }
         };
     }
 }
