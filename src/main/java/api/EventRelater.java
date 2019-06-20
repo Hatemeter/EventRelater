@@ -80,6 +80,7 @@ public class EventRelater {
             EventResponse eventResponse = restTemplate.getForObject(constructedEventsApiUrl, EventResponse.class); //created the object eventResponse that now contains the returned json object
             //this api call is currently using 20 tokens
             breakingEvents = new ArrayList<>();
+            
             breakingEventsTitles = new ArrayList<>();
             breakingEventsSentiments = new ArrayList<>();
             articlesUrls = new ArrayList<>();
