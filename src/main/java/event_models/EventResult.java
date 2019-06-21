@@ -12,6 +12,7 @@ public class EventResult {
     private Summary summary;
     private double sentiment;
     private String uri;
+    private ConceptItem[] concepts;
 
     public String getEventDate() {
         return eventDate;
@@ -59,6 +60,14 @@ public class EventResult {
 
     public void setUri(String uri) {
         this.uri = uri;
+    }
+
+    public ConceptItem[] getConcepts() {
+        return concepts;
+    }
+
+    public void setConcepts(ConceptItem[] concepts) {
+        this.concepts = concepts;
     }
 }
 

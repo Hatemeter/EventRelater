@@ -51,6 +51,7 @@ public class EventRelater {
     private static JsonObject articlesJsonObject = null; //the articles json object
     private static Articles articles = null; //the articles pojo
     private static boolean foundFlag = false; //flag
+    private static boolean foundFlag2=false;
     private static int temp = 0; //temporary variable that will hold the value of the size of the sentiments list
     private static int temp2=0;
 
@@ -99,41 +100,51 @@ public class EventRelater {
             //log.info("Length: " + Integer.toString(eventResponse.getEvents().getResults().length));
             for (int i = 0; i < eventResponse.getEvents().getResults().length; i++) //loop on the number of returned events
             {
-                if (eventResponse.getEvents().getResults()[i].getEventDate().equals(date) && eventResponse.getEvents().getResults()[i].getSentiment() < 0) { //if the found event's date matches the inputted one and its sentiment is negative
-                    constructedGetArticleFromEventUrl = baseGetEventUrl + "apiKey=" + apiKey + "&eventUri=" + eventResponse.getEvents().getResults()[i].getUri() + "&resultType=articles&includeSourceLocation=true"; //construct the api url that will be responsible of getting the article from the event through the event's uri
-                    log.info(constructedGetArticleFromEventUrl);
-                    System.out.println(eventResponse.getEvents().getResults()[i].getTitle().getEng()+": "+eventResponse.getEvents().getResults()[i].getSentiment());
-                    System.out.println();
-                    articleResponseStr = restTemplate.getForObject(constructedGetArticleFromEventUrl, String.class); //created the object articleResponse that now contains the returned json object because since the eventUri might be different, the json object returned will be different
-                    rootJsonTree = parser.parse(articleResponseStr);
-                    rootJsonObject = rootJsonTree.getAsJsonObject();
-                    for (String key : rootJsonObject.keySet()) {
-                        jsonElement = rootJsonObject.get(key);
-                        articlesJsonObject = jsonElement.getAsJsonObject();
-                        articles = gson.fromJson(articlesJsonObject.get("articles"), Articles.class);
-                    }
-
-                    for (ArticleResult result : articles.getResults()) //loop over the event's corresponding articles
-                    {
-                        if (result.getSource() != null && result.getSource().getLocation() != null && result.getSource().getLocation().getLabel() != null && result.getSource().getLocation().getLabel().getEng() != null && !result.getSource().getLocation().getLabel().getEng().isEmpty() && result.getSource().getLocation().getLabel().getEng().equals("United Kingdom") && result.getSource().getTitle() != null && eventResponse.getEvents() != null && result.getTitle().equals(eventResponse.getEvents().getResults()[i].getTitle().printTitle())) { //if the article's source was from the United Kingdom and the title of the article is equal to the title of the aforementioned event
-                            breakingEventsTitles.add(eventResponse.getEvents().getResults()[i].getTitle().printTitle()); //add the title to the list
-                            //log.info("title: " + breakingEventsTitles.get(temp2));
-                            breakingEventsSentiments.add(eventResponse.getEvents().getResults()[i].getSentiment()); //add the sentiment to the list
-                            articlesUrls.add(result.getUrl());
-                            articleSourceNames.add(result.getSource().getTitle());
-                            foundFlag = true;
-                            //log.info("sentiment: " + Double.toString(breakingEventsSentiments.get(temp2)));
-                            temp++; //the size of the breakingEventsSentiments array increased by 1
-                            //temp2++;
-                        }
-                        if (foundFlag) {
-                            foundFlag = false;
-                            break;
+                foundFlag2=false;
+                for(int j=0; j < eventResponse.getEvents().getResults()[i].getConcepts().length; j++) {
+                    if (eventResponse.getEvents().getResults()[i].getEventDate().equals(date) && eventResponse.getEvents().getResults()[i].getSentiment() < 0 && !eventResponse.getEvents().getResults()[i].getTitle().getEng().toLowerCase().contains("trump") && (eventResponse.getEvents().getResults()[i].getConcepts()[j].getLabel().getEng().contains("Islam") || eventResponse.getEvents().getResults()[i].getConcepts()[j].getLabel().getEng().contains("Muslim"))) { //if the found event's date matches the inputted one and its sentiment is negative
+                        foundFlag2=true;
+                        log.info("entered index event: "+i+" entered index concept: "+j);
+                        constructedGetArticleFromEventUrl = baseGetEventUrl + "apiKey=" + apiKey + "&eventUri=" + eventResponse.getEvents().getResults()[i].getUri() + "&resultType=articles&includeSourceLocation=true"; //construct the api url that will be responsible of getting the article from the event through the event's uri
+                        log.info(constructedGetArticleFromEventUrl);
+                        System.out.println(eventResponse.getEvents().getResults()[i].getTitle().getEng() + ": " + eventResponse.getEvents().getResults()[i].getSentiment());
+                        System.out.println();
+                        articleResponseStr = restTemplate.getForObject(constructedGetArticleFromEventUrl, String.class); //created the object articleResponse that now contains the returned json object because since the eventUri might be different, the json object returned will be different
+                        rootJsonTree = parser.parse(articleResponseStr);
+                        rootJsonObject = rootJsonTree.getAsJsonObject();
+                        for (String key : rootJsonObject.keySet()) {
+                            jsonElement = rootJsonObject.get(key);
+                            articlesJsonObject = jsonElement.getAsJsonObject();
+                            articles = gson.fromJson(articlesJsonObject.get("articles"), Articles.class);
                         }
 
+                        for (ArticleResult result : articles.getResults()) //loop over the event's corresponding articles
+                        {
+                            if (result.getSource() != null && result.getSource().getLocation() != null && result.getSource().getLocation().getLabel() != null && result.getSource().getLocation().getLabel().getEng() != null && !result.getSource().getLocation().getLabel().getEng().isEmpty() && result.getSource().getLocation().getLabel().getEng().equals("United Kingdom") && result.getSource().getTitle() != null && eventResponse.getEvents() != null && result.getTitle().equals(eventResponse.getEvents().getResults()[i].getTitle().printTitle())) { //if the article's source was from the United Kingdom and the title of the article is equal to the title of the aforementioned event
+                                breakingEventsTitles.add(eventResponse.getEvents().getResults()[i].getTitle().printTitle()); //add the title to the list
+                                //log.info("title: " + breakingEventsTitles.get(temp2));
+                                breakingEventsSentiments.add(eventResponse.getEvents().getResults()[i].getSentiment()); //add the sentiment to the list
+                                articlesUrls.add(result.getUrl());
+                                articleSourceNames.add(result.getSource().getTitle());
+                                foundFlag = true;
+                                //log.info("sentiment: " + Double.toString(breakingEventsSentiments.get(temp2)));
+                                temp++; //the size of the breakingEventsSentiments array increased by 1
+                                //temp2++;
+                            }
+                            if (foundFlag) {
+                                foundFlag = false;
+                                break;
+                            }
+
+                        }
+
+                    } //if concepts end
+                    if(foundFlag2){
+                        foundFlag2=false;
+                        break;
                     }
-                }
-            }
+                }//concepts loop end
+            }//events loop end
             if(temp==0){
                 System.out.println("UK newspapers did not report any relevant breaking events that might have sparked Islamophobic hashtags on this day.");
                 System.exit(0);

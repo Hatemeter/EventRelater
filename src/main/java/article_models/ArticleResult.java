@@ -1,5 +1,9 @@
 package article_models;
 
+import event_models.ConceptItem;
+
+import java.util.Arrays;
+
 /**
  * @author Mohamad Baalbaki
  */
@@ -8,6 +12,7 @@ public class ArticleResult {
     private String url;
     private String title;
     private Source source;
+    private ConceptItem[] concepts;
 
     public String getUri() {
         return uri;
@@ -41,6 +46,14 @@ public class ArticleResult {
         this.source = source;
     }
 
+    public ConceptItem[] getConcepts() {
+        return concepts;
+    }
+
+    public void setConcepts(ConceptItem[] concepts) {
+        this.concepts = concepts;
+    }
+
     @Override
     public String toString() {
         return "ArticleResult{" +
@@ -48,6 +61,7 @@ public class ArticleResult {
                 ", url='" + url + '\'' +
                 ", title='" + title + '\'' +
                 ", source=" + source +
+                ", concepts=" + Arrays.toString(concepts) +
                 '}';
     }
 }
