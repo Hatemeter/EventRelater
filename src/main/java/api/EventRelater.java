@@ -89,6 +89,7 @@ public class EventRelater {
             EventResponse eventResponse = restTemplate.getForObject(constructedEventsApiUrl, EventResponse.class); //created the object eventResponse that now contains the returned json object
             //When this api call doesn't find an event, 20 tokens are spent
             //When this api call finds an event, it uses 34 tokens => 58.82 code runs => 1 CODE RUN COSTS 0.48 EUROS (budget after discount is 28.29 EUROS/MONTH) => THIS CODE CAN BE RAN A MAX OF 1 TIMES PER DAY
+            //Now my algorithm only consumes 25 tokens per search instead of 34
             breakingEvents = new ArrayList<>();
             breakingEventsTitles = new ArrayList<>();
             breakingEventsSentiments = new ArrayList<>();
