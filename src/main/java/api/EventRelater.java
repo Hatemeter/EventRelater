@@ -50,15 +50,20 @@ public class EventRelater {
     private static JsonElement jsonElement = null; //the articles json element
     private static JsonObject articlesJsonObject = null; //the articles json object
     private static Articles articles = null; //the articles pojo
-    private static boolean foundFlag = false; //flag
-    private static boolean foundFlag2=false;
-    private static int temp = 0; //temporary variable that will hold the value of the size of the sentiments list
-    private static int temp2=0;
+    private static boolean articleFoundFlag = false; //flag for the found article
+    private static boolean conceptFoundFlag=false; //flag for the found concept
+    private static int tempSize = 0; //temporary variable that will hold the value of the size of the sentiments list
 
     public static void main(String[] args) {
         Scanner scan = new Scanner(System.in);
         System.out.print("Kindly enter the date of the Islamophobic hate speech peak: ");
-        date = scan.next();
+        try{
+            date = scan.next();
+        }
+        catch (Exception e){
+            System.out.println("Out of tokens");
+            e.printStackTrace();
+        }
         Properties prop = new Properties();
         InputStream input = null;
         try {
@@ -76,6 +81,7 @@ public class EventRelater {
             e.printStackTrace();
         }
         SpringApplication.run(EventRelater.class); //run the springboot application
+        // TODO: 24/06/19 Store the already computed results in a database for faster and cheaper access later on
     }
 
     @Bean
@@ -101,10 +107,10 @@ public class EventRelater {
             //log.info("Length: " + Integer.toString(eventResponse.getEvents().getResults().length));
             for (int i = 0; i < eventResponse.getEvents().getResults().length; i++) //loop on the number of returned events
             {
-                foundFlag2=false;
+                conceptFoundFlag=false;
                 for(int j=0; j < eventResponse.getEvents().getResults()[i].getConcepts().length; j++) {
-                    if (eventResponse.getEvents().getResults()[i].getEventDate().equals(date) && eventResponse.getEvents().getResults()[i].getSentiment() < 0 && !eventResponse.getEvents().getResults()[i].getTitle().getEng().toLowerCase().contains("trump") && (eventResponse.getEvents().getResults()[i].getConcepts()[j].getLabel().getEng().contains("Islam") || eventResponse.getEvents().getResults()[i].getConcepts()[j].getLabel().getEng().contains("Muslim"))) { //if the found event's date matches the inputted one and its sentiment is negative
-                        foundFlag2=true;
+                    if (eventResponse.getEvents().getResults()[i].getEventDate().equals(date) && eventResponse.getEvents().getResults()[i].getSentiment() < 0 && !eventResponse.getEvents().getResults()[i].getConcepts()[j].getLabel().getEng().toLowerCase().contains("trump") && (eventResponse.getEvents().getResults()[i].getConcepts()[j].getLabel().getEng().contains("Islam") || eventResponse.getEvents().getResults()[i].getConcepts()[j].getLabel().getEng().contains("Muslim"))) { //if the found event's date matches the inputted one and its sentiment is negative and it's not related to trump and it is remotely related to Islam
+                        conceptFoundFlag=true; //concept was found
                         log.info("entered index event: "+i+" entered index concept: "+j);
                         constructedGetArticleFromEventUrl = baseGetEventUrl + "apiKey=" + apiKey + "&eventUri=" + eventResponse.getEvents().getResults()[i].getUri() + "&resultType=articles&includeSourceLocation=true"; //construct the api url that will be responsible of getting the article from the event through the event's uri
                         log.info(constructedGetArticleFromEventUrl);
@@ -125,39 +131,39 @@ public class EventRelater {
                                 breakingEventsTitles.add(eventResponse.getEvents().getResults()[i].getTitle().printTitle()); //add the title to the list
                                 //log.info("title: " + breakingEventsTitles.get(temp2));
                                 breakingEventsSentiments.add(eventResponse.getEvents().getResults()[i].getSentiment()); //add the sentiment to the list
-                                articlesUrls.add(result.getUrl());
-                                articleSourceNames.add(result.getSource().getTitle());
-                                foundFlag = true;
+                                articlesUrls.add(result.getUrl()); //add the url to the list
+                                articleSourceNames.add(result.getSource().getTitle()); //add the source name to the list
+                                articleFoundFlag = true; //article was found
                                 //log.info("sentiment: " + Double.toString(breakingEventsSentiments.get(temp2)));
-                                temp++; //the size of the breakingEventsSentiments array increased by 1
-                                //temp2++;
+                                tempSize++; //the size of the breakingEventsSentiments array increased by 1
                             }
-                            if (foundFlag) {
-                                foundFlag = false;
+                            if (articleFoundFlag) {
+                                articleFoundFlag = false;
                                 break;
                             }
 
                         }
 
                     } //if concepts end
-                    if(foundFlag2){
-                        foundFlag2=false;
+                    if(conceptFoundFlag){
+                        conceptFoundFlag=false;
                         break;
                     }
                 }//concepts loop end
             }//events loop end
-            if(temp==0){
+
+            if(tempSize==0){
                 System.out.println("UK newspapers did not report any relevant breaking events that might have sparked Islamophobic hashtags on this day.");
                 System.exit(0);
             }
-            else if(temp==1){
+            else if(tempSize==1){
                 System.out.println("UK newspapers reported only 1 relevant breaking event that might have sparked Islamophobic hashtags on this day: ");
                 System.out.println();
                 System.out.println(breakingEventsTitles.get(0) + ": " + breakingEventsSentiments.get(0) + " / " + articlesUrls.get(0) + " / Source: " + articleSourceNames.get(0));
                 System.exit(0);
             }
-            else if(temp>=2){
-                for (int i = 0; i < temp; i++) //we want to print only the 3 most breaking ones
+            else if(tempSize>=2){
+                for (int i = 0; i < tempSize; i++) //we want to print only the 3 most breaking ones
                 {
                     minimumSentiment = Collections.min(breakingEventsSentiments); //calculate the minimum sentiment
                     //log.info("minimum: "+Double.toString(minimumSentiment));
@@ -167,23 +173,23 @@ public class EventRelater {
                     breakingEventsTitles.remove(minimumSentimentIndex); //remove the title of the event with the minimum index because we used already used it
                     breakingEventsSentiments.remove(minimumSentimentIndex); //remove the sentiment of the event with the minimum index because we already used it
                     articlesUrls.remove(minimumSentimentIndex); //remove the url at the minimum index because we already used it
-                    articleSourceNames.remove(minimumSentimentIndex);
+                    articleSourceNames.remove(minimumSentimentIndex); //remove the article source name
                 } //loop and calculate minimum again in the remaining list
-                if(temp==2){
+                if(tempSize==2){
                     System.out.println();
                     System.out.println("UK newspapers reported 2 relevant breaking events that might have sparked Islamophobic hashtags on this day: ");
                     System.out.println();
-                    for (int i = 0; i < temp; i++) {
+                    for (int i = 0; i < tempSize; i++) {
                         System.out.println(breakingEvents.get(i)); //print the corresponding events
                     }
                     System.exit(0);
                 }
-                else if(temp>=3){
-                    temp=3;
+                else if(tempSize>=3){
+                    tempSize=3;
                     System.out.println();
                     System.out.println("UK newspapers reported 3 relevant breaking events that might have sparked Islamophobic hashtags on this day: ");
                     System.out.println();
-                    for (int i = 0; i < temp; i++) {
+                    for (int i = 0; i < tempSize; i++) {
                         System.out.println(breakingEvents.get(i)); //print the corresponding events
                     }
                     System.exit(0);
