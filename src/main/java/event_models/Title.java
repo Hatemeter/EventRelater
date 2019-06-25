@@ -31,7 +31,4 @@ public class Title {
                 '}';
     }
 
-    public String printTitle(){
-        return eng;
-    }
 }

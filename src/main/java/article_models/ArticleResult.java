@@ -13,6 +13,15 @@ public class ArticleResult {
     private String title;
     private Source source;
     private ConceptItem[] concepts;
+    private String body;
+
+    public String getBody() {
+        return body;
+    }
+
+    public void setBody(String body) {
+        this.body = body;
+    }
 
     public String getUri() {
         return uri;
@@ -62,6 +71,7 @@ public class ArticleResult {
                 ", title='" + title + '\'' +
                 ", source=" + source +
                 ", concepts=" + Arrays.toString(concepts) +
+                ", body='" + body + '\'' +
                 '}';
     }
 }

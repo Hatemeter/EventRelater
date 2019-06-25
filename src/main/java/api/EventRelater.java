@@ -18,10 +18,7 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.*;
 
 /**
@@ -51,17 +48,25 @@ public class EventRelater {
     private static JsonObject articlesJsonObject = null; //the articles json object
     private static Articles articles = null; //the articles pojo
     private static boolean articleFoundFlag = false; //flag for the found article
-    private static boolean conceptFoundFlag=false; //flag for the found concept
+    private static boolean conceptFoundFlag = false; //flag for the found concept
     private static int tempSize = 0; //temporary variable that will hold the value of the size of the sentiments list
+    private static String language = null; //variable that denotes the language we are working in
+    private static BufferedWriter writer=null; //buffered write for italian articles text file
 
     public static void main(String[] args) {
         Scanner scan = new Scanner(System.in);
-        System.out.print("Kindly enter the date of the Islamophobic hate speech peak: ");
-        try{
-            date = scan.next();
+        System.out.print("Kindly enter the language:");
+        try {
+            language = scan.next();
+        } catch (InputMismatchException e) {
+            System.out.print("You entered the language in a wrong format.");
+            e.printStackTrace();
         }
-        catch (Exception e){
-            System.out.println("Out of tokens");
+        System.out.print("Kindly enter the date of the Islamophobic hate speech peak: ");
+        try {
+            date = scan.next();
+        } catch (InputMismatchException e) {
+            System.out.println("You entered the date in a wrong format.");
             e.printStackTrace();
         }
         Properties prop = new Properties();
@@ -71,7 +76,13 @@ public class EventRelater {
             prop.load(input);
             apiKey = prop.getProperty("apiKey"); //get the api key
             //For the events
-            monitoringPageUri = prop.getProperty("monitoringPageUri"); //get the uri
+            if (language.equals("eng")) {
+                monitoringPageUri = prop.getProperty("englishMonitoringPageUri"); //get the english page uri
+            } else if (language.equals("ita")) {
+                monitoringPageUri = prop.getProperty("italianMonitoringPageUri"); //get the italian page uri
+                writer = new BufferedWriter(new FileWriter("/home/baalbaki/IdeaProjects/EventRelater/italianarticles.txt")); //create the italian articles file for later sentiment analysis
+                writer.write("");
+            }
             baseEventsForTopicPageUrl = prop.getProperty("baseEventsForTopicPageUrl"); //get the topic page url
             constructedEventsApiUrl = baseEventsForTopicPageUrl + "apiKey=" + apiKey + "&uri=" + monitoringPageUri + "&eventsCount=200"; //constructed the api url with a maximum allowed event count per api call of 200
             //For the article from the corresponding event
@@ -107,11 +118,11 @@ public class EventRelater {
             //log.info("Length: " + Integer.toString(eventResponse.getEvents().getResults().length));
             for (int i = 0; i < eventResponse.getEvents().getResults().length; i++) //loop on the number of returned events
             {
-                conceptFoundFlag=false;
-                for(int j=0; j < eventResponse.getEvents().getResults()[i].getConcepts().length; j++) {
-                    if (eventResponse.getEvents().getResults()[i].getEventDate().equals(date) && eventResponse.getEvents().getResults()[i].getSentiment() < 0 && !eventResponse.getEvents().getResults()[i].getConcepts()[j].getLabel().getEng().toLowerCase().contains("trump") && (eventResponse.getEvents().getResults()[i].getConcepts()[j].getLabel().getEng().contains("Islam") || eventResponse.getEvents().getResults()[i].getConcepts()[j].getLabel().getEng().contains("Muslim"))) { //if the found event's date matches the inputted one and its sentiment is negative and it's not related to trump and it is remotely related to Islam
-                        conceptFoundFlag=true; //concept was found
-                        log.info("entered index event: "+i+" entered index concept: "+j);
+                conceptFoundFlag = false;
+                for (int j = 0; j < eventResponse.getEvents().getResults()[i].getConcepts().length; j++) {
+                    if (language.equals("eng") && eventResponse.getEvents().getResults()[i].getEventDate().equals(date) && eventResponse.getEvents().getResults()[i].getSentiment() < 0 && !eventResponse.getEvents().getResults()[i].getConcepts()[j].getLabel().getEng().toLowerCase().contains("trump") && (eventResponse.getEvents().getResults()[i].getConcepts()[j].getLabel().getEng().contains("Islam") || eventResponse.getEvents().getResults()[i].getConcepts()[j].getLabel().getEng().contains("Muslim"))) { //if the found event's date matches the inputted one and its sentiment is negative and it's not related to trump and it is remotely related to Islam
+                        conceptFoundFlag = true; //concept was found
+                        log.info("entered index event: " + i + " entered index concept: " + j);
                         constructedGetArticleFromEventUrl = baseGetEventUrl + "apiKey=" + apiKey + "&eventUri=" + eventResponse.getEvents().getResults()[i].getUri() + "&resultType=articles&includeSourceLocation=true"; //construct the api url that will be responsible of getting the article from the event through the event's uri
                         log.info(constructedGetArticleFromEventUrl);
                         System.out.println(eventResponse.getEvents().getResults()[i].getTitle().getEng() + ": " + eventResponse.getEvents().getResults()[i].getSentiment());
@@ -127,8 +138,8 @@ public class EventRelater {
 
                         for (ArticleResult result : articles.getResults()) //loop over the event's corresponding articles
                         {
-                            if (result.getSource() != null && result.getSource().getLocation() != null && result.getSource().getLocation().getLabel() != null && result.getSource().getLocation().getLabel().getEng() != null && !result.getSource().getLocation().getLabel().getEng().isEmpty() && result.getSource().getLocation().getLabel().getEng().equals("United Kingdom") && result.getSource().getTitle() != null && eventResponse.getEvents() != null && result.getTitle().equals(eventResponse.getEvents().getResults()[i].getTitle().printTitle())) { //if the article's source was from the United Kingdom and the title of the article is equal to the title of the aforementioned event
-                                breakingEventsTitles.add(eventResponse.getEvents().getResults()[i].getTitle().printTitle()); //add the title to the list
+                            if (result.getSource() != null && result.getSource().getLocation() != null && result.getSource().getLocation().getLabel() != null && result.getSource().getLocation().getLabel().getEng() != null && !result.getSource().getLocation().getLabel().getEng().isEmpty() && result.getSource().getLocation().getLabel().getEng().equals("United Kingdom") && result.getSource().getTitle() != null && eventResponse.getEvents() != null && result.getTitle().equals(eventResponse.getEvents().getResults()[i].getTitle().getEng())) { //if the article's source was from the United Kingdom and the title of the article is equal to the title of the aforementioned event
+                                breakingEventsTitles.add(eventResponse.getEvents().getResults()[i].getTitle().getEng()); //add the title to the list
                                 //log.info("title: " + breakingEventsTitles.get(temp2));
                                 breakingEventsSentiments.add(eventResponse.getEvents().getResults()[i].getSentiment()); //add the sentiment to the list
                                 articlesUrls.add(result.getUrl()); //add the url to the list
@@ -145,55 +156,104 @@ public class EventRelater {
                         }
 
                     } //if concepts end
-                    if(conceptFoundFlag){
-                        conceptFoundFlag=false;
+
+                    else if (language.equals("ita") && eventResponse.getEvents().getResults()[i].getEventDate().equals(date) && (eventResponse.getEvents().getResults()[i].getConcepts()[j].getLabel().getEng().contains("Islam") || eventResponse.getEvents().getResults()[i].getConcepts()[j].getLabel().getEng().contains("Muslim"))) { //if the found event's date matches the inputted one and its sentiment is negative and it's not related to trump and it is remotely related to Islam
+                        conceptFoundFlag = true; //concept was found
+                        log.info("entered index event: " + i + " entered index concept: " + j);
+                        constructedGetArticleFromEventUrl = baseGetEventUrl + "apiKey=" + apiKey + "&eventUri=" + eventResponse.getEvents().getResults()[i].getUri() + "&resultType=articles&includeSourceLocation=true"; //construct the api url that will be responsible of getting the article from the event through the event's uri
+                        log.info(constructedGetArticleFromEventUrl);
+                        //System.out.println(eventResponse.getEvents().getResults()[i].getTitle().getIta());
+                        System.out.println();
+                        articleResponseStr = restTemplate.getForObject(constructedGetArticleFromEventUrl, String.class); //created the object articleResponse that now contains the returned json object because since the eventUri might be different, the json object returned will be different
+                        rootJsonTree = parser.parse(articleResponseStr);
+                        rootJsonObject = rootJsonTree.getAsJsonObject();
+                        for (String key : rootJsonObject.keySet()) {
+                            jsonElement = rootJsonObject.get(key);
+                            articlesJsonObject = jsonElement.getAsJsonObject();
+                            articles = gson.fromJson(articlesJsonObject.get("articles"), Articles.class);
+                        }
+
+                        //write file
+                        //writer.write(str);
+                        //writer.close();
+
+                        /*String str2 = "World";
+                        writer = new BufferedWriter(new FileWriter("/home/baalbaki/IdeaProjects/EventRelater/italianarticles.txt", true));
+                        writer.append("\n"+str2);
+                        writer.close();*/
+
+                        for (ArticleResult result : articles.getResults()) //loop over the event's corresponding articles
+                        {
+                            if (result.getSource() != null && result.getSource().getLocation() != null && result.getSource().getLocation().getLabel() != null && result.getSource().getLocation().getLabel().getEng() != null && !result.getSource().getLocation().getLabel().getEng().isEmpty() && (result.getSource().getLocation().getLabel().getEng().equals("Italy") || result.getSource().getLocation().getCountry().getLabel().getEng().equals("Italy")) && result.getSource().getTitle() != null && eventResponse.getEvents() != null && result.getTitle().equals(eventResponse.getEvents().getResults()[i].getTitle().getIta())) { //if the article's source was from the United Kingdom and the title of the article is equal to the title of the aforementioned event
+                                breakingEvents.add(eventResponse.getEvents().getResults()[i].getTitle().getIta()+". "+result.getBody()); //add the title to the list
+                                System.out.println(eventResponse.getEvents().getResults()[i].getTitle().getIta()+". "+result.getBody());
+                                writer.append(eventResponse.getEvents().getResults()[i].getTitle().getIta().trim().replaceAll("\n","")+". "+result.getBody().trim().replaceAll("\n","")+"\n"+"\n");
+                                articlesUrls.add(result.getUrl()); //add the url to the list
+                                articleSourceNames.add(result.getSource().getTitle()); //add the source name to the list
+                                articleFoundFlag = true; //article was found
+                            }
+                            if (articleFoundFlag) {
+                                articleFoundFlag = false;
+                                break;
+                            }
+
+                        }
+
+                    } //if concepts end
+                    if (conceptFoundFlag) {
+                        conceptFoundFlag = false;
                         break;
                     }
                 }//concepts loop end
             }//events loop end
 
-            if(tempSize==0){
-                System.out.println("UK newspapers did not report any relevant breaking events that might have sparked Islamophobic hashtags on this day.");
-                System.exit(0);
-            }
-            else if(tempSize==1){
-                System.out.println("UK newspapers reported only 1 relevant breaking event that might have sparked Islamophobic hashtags on this day: ");
-                System.out.println();
-                System.out.println(breakingEventsTitles.get(0) + ": " + breakingEventsSentiments.get(0) + " / " + articlesUrls.get(0) + " / Source: " + articleSourceNames.get(0));
-                System.exit(0);
-            }
-            else if(tempSize>=2){
-                for (int i = 0; i < tempSize; i++) //we want to print only the 3 most breaking ones
-                {
-                    minimumSentiment = Collections.min(breakingEventsSentiments); //calculate the minimum sentiment
-                    //log.info("minimum: "+Double.toString(minimumSentiment));
-                    minimumSentimentIndex = breakingEventsSentiments.indexOf(minimumSentiment); //get its index
-                    //log.info("index: "+minimumSentimentIndex);
-                    breakingEvents.add(breakingEventsTitles.get(minimumSentimentIndex) + ": " + minimumSentiment + " / " + articlesUrls.get(minimumSentimentIndex) + " / Source: " + articleSourceNames.get(minimumSentimentIndex)); //concatenate the title of the event with the minimum sentiment with the url with the source and add them to the list
-                    breakingEventsTitles.remove(minimumSentimentIndex); //remove the title of the event with the minimum index because we used already used it
-                    breakingEventsSentiments.remove(minimumSentimentIndex); //remove the sentiment of the event with the minimum index because we already used it
-                    articlesUrls.remove(minimumSentimentIndex); //remove the url at the minimum index because we already used it
-                    articleSourceNames.remove(minimumSentimentIndex); //remove the article source name
-                } //loop and calculate minimum again in the remaining list
-                if(tempSize==2){
-                    System.out.println();
-                    System.out.println("UK newspapers reported 2 relevant breaking events that might have sparked Islamophobic hashtags on this day: ");
-                    System.out.println();
-                    for (int i = 0; i < tempSize; i++) {
-                        System.out.println(breakingEvents.get(i)); //print the corresponding events
-                    }
+            writer.close();
+
+            if (language.equals("eng")) {
+                if (tempSize == 0) {
+                    System.out.println("UK newspapers did not report any relevant breaking events that might have sparked Islamophobic hashtags on this day.");
                     System.exit(0);
-                }
-                else if(tempSize>=3){
-                    tempSize=3;
+                } else if (tempSize == 1) {
+                    System.out.println("UK newspapers reported only 1 relevant breaking event that might have sparked Islamophobic hashtags on this day: ");
                     System.out.println();
-                    System.out.println("UK newspapers reported 3 relevant breaking events that might have sparked Islamophobic hashtags on this day: ");
-                    System.out.println();
-                    for (int i = 0; i < tempSize; i++) {
-                        System.out.println(breakingEvents.get(i)); //print the corresponding events
-                    }
+                    System.out.println(breakingEventsTitles.get(0) + ": " + breakingEventsSentiments.get(0) + " / " + articlesUrls.get(0) + " / Source: " + articleSourceNames.get(0));
                     System.exit(0);
+                } else if (tempSize >= 2) {
+                    for (int i = 0; i < tempSize; i++) //we want to print only the 3 most breaking ones
+                    {
+                        minimumSentiment = Collections.min(breakingEventsSentiments); //calculate the minimum sentiment
+                        //log.info("minimum: "+Double.toString(minimumSentiment));
+                        minimumSentimentIndex = breakingEventsSentiments.indexOf(minimumSentiment); //get its index
+                        //log.info("index: "+minimumSentimentIndex);
+                        breakingEvents.add(breakingEventsTitles.get(minimumSentimentIndex) + ": " + minimumSentiment + " / " + articlesUrls.get(minimumSentimentIndex) + " / Source: " + articleSourceNames.get(minimumSentimentIndex)); //concatenate the title of the event with the minimum sentiment with the url with the source and add them to the list
+                        breakingEventsTitles.remove(minimumSentimentIndex); //remove the title of the event with the minimum index because we used already used it
+                        breakingEventsSentiments.remove(minimumSentimentIndex); //remove the sentiment of the event with the minimum index because we already used it
+                        articlesUrls.remove(minimumSentimentIndex); //remove the url at the minimum index because we already used it
+                        articleSourceNames.remove(minimumSentimentIndex); //remove the article source name
+                    } //loop and calculate minimum again in the remaining list
+                    if (tempSize == 2) {
+                        System.out.println();
+                        System.out.println("UK newspapers reported 2 relevant breaking events that might have sparked Islamophobic hashtags on this day: ");
+                        System.out.println();
+                        for (int i = 0; i < tempSize; i++) {
+                            System.out.println(breakingEvents.get(i)); //print the corresponding events
+                        }
+                        System.exit(0);
+                    } else if (tempSize >= 3) {
+                        tempSize = 3;
+                        System.out.println();
+                        System.out.println("UK newspapers reported 3 relevant breaking events that might have sparked Islamophobic hashtags on this day: ");
+                        System.out.println();
+                        for (int i = 0; i < tempSize; i++) {
+                            System.out.println(breakingEvents.get(i)); //print the corresponding events
+                        }
+                        System.exit(0);
+                    }
                 }
+            }
+
+            else if(language.equals("ita")){
+                System.exit(0);
             }
 
         };
