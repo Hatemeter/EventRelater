@@ -184,10 +184,14 @@ public class EventRelater {
 
                         for (ArticleResult result : articles.getResults()) //loop over the event's corresponding articles
                         {
-                            if (result.getSource() != null && result.getSource().getLocation() != null && result.getSource().getLocation().getLabel() != null && result.getSource().getLocation().getLabel().getEng() != null && !result.getSource().getLocation().getLabel().getEng().isEmpty() && (result.getSource().getLocation().getLabel().getEng().equals("Italy") || result.getSource().getLocation().getCountry().getLabel().getEng().equals("Italy")) && result.getSource().getTitle() != null && eventResponse.getEvents() != null && result.getTitle().equals(eventResponse.getEvents().getResults()[i].getTitle().getIta())) { //if the article's source was from the United Kingdom and the title of the article is equal to the title of the aforementioned event
+                            //System.out.println(result.getTitle());
+                            //System.out.println(eventResponse.getEvents().getResults()[i].getTitle().getIta());
+                            //System.out.println(result.getSource().toString());
+                            //System.out.println();
+                            if (result.getSource() != null && result.getSource().getLocation() != null && result.getSource().getLocation().getLabel() != null && result.getSource().getLocation().getLabel().getEng() != null && !result.getSource().getLocation().getLabel().getEng().isEmpty() && result.getSource().getLocation().getCountry()!=null && !result.getSource().getLocation().getLabel().getEng().isEmpty() && result.getSource().getLocation().getCountry().getLabel()!=null && !result.getSource().getLocation().getLabel().getEng().isEmpty() && result.getSource().getLocation().getCountry().getLabel().getEng()!=null && (result.getSource().getLocation().getLabel().getEng().equals("Italy") || result.getSource().getLocation().getCountry().getLabel().getEng().equals("Italy")) && result.getSource().getTitle() != null && eventResponse.getEvents() != null && result.getTitle().equals(eventResponse.getEvents().getResults()[i].getTitle().getIta())) { //if the article's source was from the United Kingdom and the title of the article is equal to the title of the aforementioned event
                                 breakingEvents.add(eventResponse.getEvents().getResults()[i].getTitle().getIta()+". "+result.getBody()); //add the title to the list
                                 System.out.println(eventResponse.getEvents().getResults()[i].getTitle().getIta()+". "+result.getBody());
-                                writer.append(eventResponse.getEvents().getResults()[i].getTitle().getIta().trim().replaceAll("\n","")+". "+result.getBody().trim().replaceAll("\n","")+"\n"+"\n");
+                                writer.append(eventResponse.getEvents().getResults()[i].getTitle().getIta().trim().replaceAll("\n","")+". /ENDOFTITLE/. "+result.getBody().trim().replaceAll("(\n)+",". ")+" /URL/ "+result.getUrl()+" /SOURCE/ "+result.getSource().getTitle()+" /ENDOFARTICLE/"+"\n");
                                 articlesUrls.add(result.getUrl()); //add the url to the list
                                 articleSourceNames.add(result.getSource().getTitle()); //add the source name to the list
                                 articleFoundFlag = true; //article was found
@@ -207,6 +211,7 @@ public class EventRelater {
                 }//concepts loop end
             }//events loop end
 
+            if(language.equals("ita"))
             writer.close();
 
             if (language.equals("eng")) {
