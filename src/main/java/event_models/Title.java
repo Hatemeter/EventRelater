@@ -6,6 +6,7 @@ package event_models;
 public class Title {
     private String ita;
     private String eng;
+    private String fra;
 
     public String getIta() {
         return ita;
@@ -23,12 +24,20 @@ public class Title {
         this.eng = eng;
     }
 
+    public String getFra() {
+        return fra;
+    }
+
+    public void setFra(String fra) {
+        this.fra = fra;
+    }
+
     @Override
     public String toString() {
         return "Title{" +
                 "ita='" + ita + '\'' +
                 ", eng='" + eng + '\'' +
+                ", fra='" + fra + '\'' +
                 '}';
     }
-
 }
