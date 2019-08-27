@@ -1,11 +1,9 @@
-package event_models;
-
-import common_models.Label;
+package eu.fbk.dh.EventRelater.common_models;
 
 /**
  * @author Mohamad Baalbaki
  */
-public class ConceptItem {
+public class Country {
     private Label label;
 
     public Label getLabel() {
@@ -18,7 +16,7 @@ public class ConceptItem {
 
     @Override
     public String toString() {
-        return "ConceptItem{" +
+        return "Country{" +
                 "label=" + label +
                 '}';
     }

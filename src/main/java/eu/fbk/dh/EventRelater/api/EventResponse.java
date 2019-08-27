@@ -1,8 +1,8 @@
-package api;
+package eu.fbk.dh.EventRelater.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import event_models.Events;
+import eu.fbk.dh.EventRelater.event_models.Events;
 
 /**
  * @author Mohamad Baalbaki

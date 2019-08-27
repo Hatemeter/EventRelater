@@ -1,4 +1,4 @@
-package common_models;
+package eu.fbk.dh.EventRelater.common_models;
 
 /**
  * @author Mohamad Baalbaki

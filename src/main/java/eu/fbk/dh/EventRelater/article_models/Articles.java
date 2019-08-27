@@ -1,6 +1,4 @@
-package article_models;
-
-import event_models.EventResult;
+package eu.fbk.dh.EventRelater.article_models;
 
 import java.util.Arrays;
 

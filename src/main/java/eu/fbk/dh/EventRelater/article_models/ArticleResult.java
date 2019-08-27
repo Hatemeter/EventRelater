@@ -1,6 +1,6 @@
-package article_models;
+package eu.fbk.dh.EventRelater.article_models;
 
-import event_models.ConceptItem;
+import eu.fbk.dh.EventRelater.event_models.ConceptItem;
 
 import java.util.Arrays;
 

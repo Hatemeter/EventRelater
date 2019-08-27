@@ -1,4 +1,4 @@
-package event_models;
+package eu.fbk.dh.EventRelater.event_models;
 
 /**
  * @author Mohamad Baalbaki

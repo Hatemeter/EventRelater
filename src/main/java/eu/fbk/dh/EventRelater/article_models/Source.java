@@ -1,6 +1,6 @@
-package article_models;
+package eu.fbk.dh.EventRelater.article_models;
 
-import common_models.Location;
+import eu.fbk.dh.EventRelater.common_models.Location;
 
 /**
  * @author Mohamad Baalbaki
