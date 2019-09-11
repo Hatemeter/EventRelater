@@ -32,7 +32,7 @@ public class EventRelater {
         String frenchLemmasApiKey = null;
         String frenchLemmasBaseUrl = null;
         try {
-            input = getClass().getClassLoader().getResourceAsStream("apikeys.properties"); //load the file that has the aforementioned global variables
+            input = getClass().getClassLoader().getResourceAsStream("config.properties"); //load the file that has the aforementioned global variables
             prop.load(input);
             apiKey = prop.getProperty("apiKey"); //get the api key
             //For the events
@@ -78,8 +78,8 @@ public class EventRelater {
         return finalEventsAndSentiments;
     }
 
-    public static void main(String[] args) throws IOException {
-            /*EventRelater eventRelater=new EventRelater("fra","2019-07-31");
+    /*public static void main(String[] args) throws IOException {
+            *//*EventRelater eventRelater=new EventRelater("fra","2019-07-31");
             ArrayList<String> x=new ArrayList<>();
             try {
                  x = eventRelater.getFinalEventsAndSentiments();
@@ -89,7 +89,7 @@ public class EventRelater {
             }
             for(int i=0;i<x.size();i++){
                 System.out.println(x.get(i));
-            }*/
-    }
+            }*//*
+    }*/
 
 }
