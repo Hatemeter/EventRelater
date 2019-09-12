@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.google.gson.JsonSyntaxException;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.web.client.RestTemplate;
 import com.meaningcloud.*;
@@ -74,7 +75,7 @@ public class FrenchAnalyzer extends SentimentAnalyzer {
                             .build(frenchLemmasApikey, language)
                             .withText(articlesText.get(i).trim())
                             .send();
-                } catch (NumberFormatException e) {
+                } catch (JsonSyntaxException | NumberFormatException e) {
                     //don't want the "expected an int error to print"
                 }
 

@@ -149,7 +149,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>is.sns.TwitterJsonMerger.Main4</mainClass>
+                            <mainClass>eu.fbk.dh.EventRelater.main.EventsMain</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

@@ -18,7 +18,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class Main {
+public class EventsMain {
     private static int counterApi = 0;
     private static String lang = null;
 
@@ -31,7 +31,7 @@ public class Main {
         InputStream input = null;
 
         try {
-            input = Main.class.getClassLoader().getResourceAsStream("config.properties");
+            input = EventsMain.class.getClassLoader().getResourceAsStream("config.properties");
             prop.load(input);
             String mysqlUser = prop.getProperty("mysqlUser");
             String mysqlPassword = prop.getProperty("mysqlPassword");
@@ -51,10 +51,8 @@ public class Main {
                 cores = cores / 2;
             }
 
-            for (int k = 0; k < 3; k++) { //run on the 3 languages eng (25) french (18) italian (24)
-                //0 to 24 en
-                //25 to 42 fr
-                //43 to 66 it
+            for (int k = 0; k < 3; k++) {
+
                 ArrayList<String> hashtagsWhoseDataWasReplaced=new ArrayList<>();
 
                 Connection dbconn = null;
@@ -67,9 +65,9 @@ public class Main {
 
                 for (int i = counterLang; i < args.length; i++) {
                     try {
-                        if (i <= 24) lang = "en";
-                        else if (i >= 25 && i <= 42) lang = "fr";
-                        else if (i >= 43 && i <= 66) lang = "it";
+                        if (i <= 40) lang = "en";
+                        else if (i >= 41 && i <= 58) lang = "fr";
+                        else if (i >= 59 && i <= 82) lang = "it";
 
                         Gson gson = new GsonBuilder().create();
                         //Path inputFile = Paths.get(args[i]);
@@ -269,8 +267,24 @@ public class Main {
 
                 System.out.println("Hashtags whose data was replaced: "+hashtagsWhoseDataWasReplaced.toString());
 
-                for(int i=0; i< args.length ; i++){ //loop is running unnecessary checks on the other languages
-                    if(!hashtagsWhoseDataWasReplaced.contains(args[i])){ //to replace the data of hashtags without tweets
+                int startinglangIndex=-1;
+                int endingLangIndex=-1;
+
+                if(lang.equals("en")) {
+                    startinglangIndex=0;
+                    endingLangIndex=40;
+                }
+                else if (lang.equals("fr")){
+                    startinglangIndex=41;
+                    endingLangIndex=58;
+                }
+                else if(lang.equals("it")){
+                    startinglangIndex=59;
+                    endingLangIndex=82;
+                }
+
+                for(int i=startinglangIndex; i<= endingLangIndex ; i++){
+                    if(!hashtagsWhoseDataWasReplaced.contains(args[i])){
                         PreparedStatement pstmt = dbconn.prepareStatement("UPDATE "+lang+"_alerts_trend SET data = ? WHERE "+lang+"_alerts_trend.hashtag = ?");
                         pstmt.setString(1, "{\"data\":[0],\"labels\":[\"\"],\"threshold\":0.0,\"events\":[[{}]]}");
                         pstmt.setString(2, args[i]);
