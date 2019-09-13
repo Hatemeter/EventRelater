@@ -124,7 +124,7 @@ public class EventsMain {
                     }
 
                     counterLang++;
-                    if(i==24 || i==42) break;
+                    if(i==40 || i==58) break;
                 }
 
                 Connection finalDbconn = dbconn;
